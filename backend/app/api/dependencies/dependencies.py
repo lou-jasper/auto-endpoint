@@ -2,19 +2,17 @@
 # -*- coding: utf-8 -*-
 """依赖注入配置中心 - 统一管理所有依赖实例"""
 
-from typing import Callable, Type, TypeVar, AsyncGenerator, Optional, Any
-from fastapi import Depends
+from typing import TypeVar, AsyncGenerator, Optional, Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # 基础设施依赖
 from app.adapters.cache.cache import async_redis
 from app.adapters.db.session import DatabaseManager
-from app.adapters.external.http_client import HttpClient
+
 
 # 仓库 & 服务
-from app.adapters.db.repositories.base_repositories import BaseRepository
-
-
+from app.adapters.db.repositories.base_repo import BaseRepository
 
 # 类型变量
 RepoType = TypeVar("RepoType", bound=BaseRepository)
