@@ -1,43 +1,34 @@
-import logging
-from contextlib import asynccontextmanager
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import uuid
+
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.requests import Request
 
-from app.api.v1 import api_router
-from app.db.init_db import init_db
+from app.api.router import api_router
+from app.core.config import settings
+from app.lifespan import app_lifespan
+from app.middleware.exception_handler import register_exception_handlers
+from app.middleware.request_id import RequestIDMiddleware
+from app.utils.logging import setup_logging
 
-# 配置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """应用生命周期管理"""
-    # 启动时执行
-    logger.info("正在启动应用...")
-    try:
-        # 初始化数据库
-        await init_db()
-        logger.info("数据库初始化完成")
-    except Exception as e:
-        logger.error(f"应用启动失败: {str(e)}")
-        raise
-    
-    yield
-    
-    # 关闭时执行
-    logger.info("应用正在关闭...")
-
-
+setup_logging()
 app = FastAPI(
-    title="接口自动化平台",
-    description="一个轻量、高效、可扩展的接口自动化测试平台",
-    version="1.0.0",
-    lifespan=lifespan
+    title=settings.APP_TITLE,
+    version=settings.APP_VERSION,
+    docs_url=settings.DOCS_URL,
+    redoc_url=settings.REDOC_URL,
+    lifespan=app_lifespan,
+    debug=False
 )
+app.add_middleware(RequestIDMiddleware)
+logger = structlog.get_logger()
 
-# 配置CORS
+register_exception_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,19 +37,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 挂载API路由
 app.include_router(api_router, prefix="/api")
 
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to API Automation Platform"}
-
-
-@app.get("/health")
-async def health_check():
-    """健康检查接口"""
+@app.get("/health", tags=["系统管理"])
+async def health_check(request: Request):
+    trace_id = uuid.uuid4().hex
+    logger.info("healthCheck", path=request.url.path)
     return {
-        "status": "healthy",
-        "message": "API Automation Platform is running"
-    } 
+        "code": 200,
+        "msg": "ok",
+        "data": {
+            "env": settings.ENV,
+            "version": settings.APP_VERSION,
+            "trace_id": trace_id,
+            "db": "connected" if settings.DATABASE_URL else "disconnected",
+            "redis": "connected" if settings.REDIS_URL else "disconnected"
+        }
+    }

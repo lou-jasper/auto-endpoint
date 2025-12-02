@@ -1,0 +1,6 @@
+exclude_dirs:
+  - tests
+  - .venv
+skips:
+  - B101  # assert 可跳过
+  - B608  # SQL injection (根据业务情况关闭)
