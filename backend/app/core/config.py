@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from functools import lru_cache
 from typing import Optional, List
 from pydantic_settings import BaseSettings

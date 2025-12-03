@@ -1,67 +1,23 @@
 [project]
-name = "test"
+name = "fastapi-mvcsr-ddd-template"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiomysql>=0.3.2",
-    "asyncpg>=0.31.0",
-    "bandit>=1.9.2",
+    "argon2-cffi>=25.1.0",
     "bcrypt>=5.0.0",
-    "black>=25.11.0",
-    "celery>=5.5.3",
-    "cryptography>=46.0.3",
-    "fastapi>=0.122.0",
+    "celery>=5.6.0",
+    "fastapi>=0.123.5",
     "greenlet>=3.2.4",
-    "httpx>=0.28.1",
-    "loguru>=0.7.3",
-    "mypy>=1.19.0",
     "passlib>=1.7.4",
     "pydantic-settings>=2.12.0",
     "pydantic[email]>=2.12.5",
     "pytest>=9.0.1",
-    "pytest-asyncio>=1.3.0",
-    "python-json-logger>=4.0.0",
-    "pyyaml>=6.0.3",
+    "python-jose>=3.5.0",
     "redis>=7.1.0",
-    "ruff>=0.14.7",
-    "sqlmodel>=0.0.27",
+    "sqlalchemy>=2.0.44",
     "structlog>=25.5.0",
     "uvicorn>=0.38.0",
-]
-
-[tool.ruff]
-line-length = 88
-target-version = "py313"
-
-# 启用 Ruff Formatter（替代 black）
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-docstring-code-format = true
-
-[tool.ruff.lint]
-# 检查哪些规则
-select = [
-    "E", # pycodestyle errors
-    "F", # pyflakes
-    "I", # isort import order
-    "B", # bugbear
-    "UP", # pyupgrade
-    "ASYNC", # async best practice
-    "N", # pep8 naming
-    "S", # bandit（轻量版安全检测）
-]
-
-# 不检查行长度（常见习惯）
-ignore = ["E501"]
-
-# 自动忽略虚拟环境、缓存
-exclude = [
-    ".venv",
-    ".mypy_cache",
-    ".pytest_cache",
-    "build",
-    "dist",
 ]

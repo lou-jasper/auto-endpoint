@@ -1,57 +1,38 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import uuid
-
-import structlog
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.requests import Request
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 
 from app.api.router import api_router
-from app.core.config import settings
+from app.core.exception import (
+    global_exception_handler,
+    validation_exception_handler,
+    BusinessException,
+    business_exception_handler,
+    response_validation_exception_handler
+)
+
+from app.core.logger import configure_logging, request_id_middleware, get_logger, BestLogMiddleware
 from app.lifespan import app_lifespan
-from app.middleware.exception_handler import register_exception_handlers
-from app.middleware.request_id import RequestIDMiddleware
-from app.utils.logging import setup_logging
 
-setup_logging()
+configure_logging()
+
 app = FastAPI(
-    title=settings.APP_TITLE,
-    version=settings.APP_VERSION,
-    docs_url=settings.DOCS_URL,
-    redoc_url=settings.REDOC_URL,
+    title="FastAPI MVCSR DDD Template",
     lifespan=app_lifespan,
-    debug=False
 )
-app.add_middleware(RequestIDMiddleware)
-logger = structlog.get_logger()
+app.middleware("http")(request_id_middleware)
+app.add_middleware(BestLogMiddleware)
 
-register_exception_handlers(app)
+logger = get_logger(__name__)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(api_router)
 
-app.include_router(api_router, prefix="/api")
+app.add_exception_handler(Exception, global_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(BusinessException, business_exception_handler)
+app.add_exception_handler(ResponseValidationError, response_validation_exception_handler)
 
 
-@app.get("/health", tags=["系统管理"])
-async def health_check(request: Request):
-    trace_id = uuid.uuid4().hex
-    logger.info("healthCheck", path=request.url.path)
-    return {
-        "code": 200,
-        "msg": "ok",
-        "data": {
-            "env": settings.ENV,
-            "version": settings.APP_VERSION,
-            "trace_id": trace_id,
-            "db": "connected" if settings.DATABASE_URL else "disconnected",
-            "redis": "connected" if settings.REDIS_URL else "disconnected"
-        }
-    }
+@app.get("/ping")
+async def ping():
+    logger.info("ping called")
+    return {"msg": "pong"}

@@ -1,0 +1,12 @@
+structlog
+starlette
+pydantic-settings
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-jose
+passlib[bcrypt]
+alembic
+pytest
+httpx

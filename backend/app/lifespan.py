@@ -1,36 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+import asyncio
 
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
-from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeoutError, RedisError
-from sqlalchemy.exc import SQLAlchemyError
-
-from app.adapters.cache.cache import async_redis
-from app.adapters.db.session import init_db, close_db
+from app.core.cache import init_redis, close_redis
+from app.core.database import init_db, close_db
+from app.events.consumers.consumer import event_listener
 
 
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
-    try:
-        client = async_redis.client
-        await client.ping()
-        await init_db()
-    except (RedisConnectionError, RedisTimeoutError, RedisError):
-        raise
+    # ----------- startup -----------
+
+    await init_db()
+    await init_redis()
+    task = asyncio.create_task(event_listener())
 
     yield
 
+    # ----------- shutdown -----------
+    await close_db()
+    await close_redis()
+    task.cancel()
     try:
-        client = async_redis.client
-        if client:
-            await client.close()
-            await client.connection_pool.disconnect()
-    except (RedisConnectionError, RedisTimeoutError, RedisError):
-        pass
-
-    try:
-        await close_db()
-    except SQLAlchemyError:
-        pass
+        await task
+    except asyncio.CancelledError:
+        print("🛑 Redis 事件监听任务已停止")
