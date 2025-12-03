@@ -34,6 +34,12 @@ class EnvironmentService(
         super().__init__(repo)
         self.repo = repo
 
+    async def create_global_variable(self, data):
+        pass
+
+    async def list_global_variables(self, skip, limit):
+        pass
+
 
 class EnvironmentHeaderService(
     BaseService[EnvironmentHeader, EnvironmentHeaderCreate, EnvironmentHeaderUpdate]
@@ -43,6 +49,9 @@ class EnvironmentHeaderService(
         self.repo = repo
 
     async def add_environment_header(self, env_id, data):
+        pass
+
+    async def list_headers(self, env_id):
         pass
 
 
@@ -60,3 +69,9 @@ class VariableExtractionRuleService(
     def __init__(self, repo: VariableExtractionRuleRepository):
         super().__init__(repo)
         self.repo = repo
+
+    async def create_rule(self, var_id, data):
+        pass
+
+    async def get_rule(self, var_id):
+        pass
